@@ -27,7 +27,7 @@ services:
 
 Ejecute el comando `mysql`
 
-```
+```shell
 mysql -u root -h 127.0.0.1 -p
 ```
 
@@ -936,6 +936,9 @@ SELECT * FROM autores WHERE seudonimo IS NOT NULL;
 
 -- OPCIÓN 2
 SELECT * FROM autores WHERE seudonimo <=>;
+
+-- OPCIÓN 3 - ESTE MUESTRA LOS REGISTROS NULOS
+SELECT * FROM autores WHERE seudonimo IS NULL;
 ```
 
 ### Buscar por rangos
@@ -959,5 +962,201 @@ SELECT * FROM libros WHERE fecha_publicacion BETWEEN '1954-11-11' AND '1985-09-0
 
 ### Buscar a través de una lista
 
-Lista
+Para buscar por lista existen estas opciones de sentencia:
+
+### Opcion 1 recomendada
+
+Harémos uso de la clausula **IN**
+
+```SQL
+SELECT * FROM libros WHERE titulo IN ('Harry Potter y la piedra filosofal', 'Cujo', 'El señor de los anillos: La comunidad del anillo', 'Cien años de soledad');
+```
+
+### Opción 2 no recomendada
+
+```sql
+SELECT * FROM libros WHERE titulo = 'Harry Potter y la piedra filosofal' OR 
+                            titulo = 'Cujo' OR 
+                            titulo = 'El señor de los anillos: La comunidad del anillo' OR
+                            titulo = 'Cien años de soledad';
+```
+
+### Registros únicos (es decir no repetidos)
+
+Utilizaremos la clausula DISTINCT para ver los registros sin valores repetidos
+
+```sql
+SELECT DISTINCT titulo FROM libros;
+```
+
+### Alias
+
+Son re nombres a columnas
+
+```SQL
+SELECT autor_id AS Autor, titulo AS Mi_Titulo FROM libros;
+
+SELECT autor_id AS Autor, titulo AS 'Mi Titulo' FROM libros;
+```
+
+### Actualizar registros
+
+Utilizaremos la clausula UPDATE 
+
+```SQL
+UPDATE libros SET descripcion = 'Una novela sobre la injusticia racial en el sur de los Estados Unidos' WHERE titulo = 'Matar a un ruiseñor';
+```
+
+#### Actualizar varios registros
+
+```SQL
+UPDATE libros SET descripcion = 'Una novela sobre la injusticia racial en el sur de los Estados Unidos', ventas = 30 WHERE titulo = 'Matar a un ruiseñor';
+```
+
+### Eliminar registros
+
+Utilizaremos la clausula DELETE
+
+#### Elimina todos los registros de la tabla
+
+```sql
+DELETE FROM libros;
+```
+
+#### Elimina un registro puntual o todos según condiciones 
+
+```sql
+DELETE FROM libros WHERE autor_id = 1;
+```
+
+### Diferencias entre truncate y delete
+
+La diferencia es que TRUNCATE no se puede utilizar con la clausula WHERE, truncate resetea la definicion de la tabla, es decir que si elimino el registro 1 y creo otro registro, si es con DELETE entonces el segúndo registro a pesar que sea el primero aparecerá con el id 2
+
+## Búsqueda avanzada
+
+### Por medio de string
+
+Búscaremos los recursos normales, en este caso búscaré 
+
+```SQL
+SELECT * FROM autores WHERE pais_origen = 'USA';
+
++----------+----------+------------+---------------------+--------+------------------+-------------+---------------------+
+| autor_id | nombre   | apellido   | seudonimo           | genero | fecha_nacimiento | pais_origen | fecha_creacion      |
++----------+----------+------------+---------------------+--------+------------------+-------------+---------------------+
+|        6 | Harper   | Lee        | Harper Lee          | F      | 1926-04-28       | USA         | 2024-11-03 03:22:36 |
+|        7 | F. Scott | Fitzgerald | F. Scott Fitzgerald | M      | 1896-09-24       | USA         | 2024-11-03 03:22:36 |
+|       18 | J.D.     | Salinger   | J.D. Salinger       | M      | 1919-01-01       | USA         | 2024-11-03 03:22:36 |
++----------+----------+------------+---------------------+--------+------------------+-------------+---------------------+
+```
+
+#### Palabras que empiezan por
+
+Para buscar un registro que empiezanos pr harry potter debemos hacerlo así:
+
+```SQL
+SELECT * FROM libros WHERE titulo LIKE 'Harry Potter%'; -- BUSCAR LIBROS DE HARRY POTTER
+
++----------+----------+-------------------------------------------+---------------------------------------------------------+---------+-------------------+---------------------+
+| libro_id | autor_id | titulo                                    | descripcion                                             | paginas | fecha_publicacion | fecha_creacion      |
++----------+----------+-------------------------------------------+---------------------------------------------------------+---------+-------------------+---------------------+
+|        1 |        1 | Harry Potter y la piedra filosofal        | El primer libro de la serie de Harry Potter             |     223 | 1997-06-26        | 2024-11-03 03:22:37 |
+|        2 |        1 | Harry Potter y la cámara secreta          | El segundo libro de la serie de Harry Potter            |     251 | 1998-07-02        | 2024-11-03 03:22:37 |
+|        3 |        1 | Harry Potter y el prisionero de Azkaban   | El tercer libro de la serie de Harry Potter             |     317 | 1999-07-08        | 2024-11-03 03:22:37 |
+
++----------+----------+-------------------------------------------+---------------------------------------------------------+-
+```
+
+#### Palabras que terminan en
+
+Si queremos buscar un sub-string que se encuentra al final debemos hacerlo así;
+
+```SQL
+SELECT * FROM libros WHERE titulo LIKE '%anillo';
+
+
++----------+----------+---------------------------------------------------+-------------------------------------------------------------+---------+-------------------+---------------------+
+| libro_id | autor_id | titulo                                            | descripcion                                                 | paginas | fecha_publicacion | fecha_creacion      |
++----------+----------+---------------------------------------------------+-------------------------------------------------------------+---------+-------------------+---------------------+
+|        8 |        2 | El señor de los anillos: La comunidad del anillo  | El primer libro de la trilogía de El señor de los anillos   |     423 | 1954-07-29        | 2024-11-03 03:22:37 |
++----------+----------+---------------------------------------------------+-------------------------------------------------------------+---------+-------------------+---------------------+
+```
+
+#### Palabras que empiecen o termin por
+
+Podemoslos utilizar doble % si no sabemos si un registro está al inicio, medio o final
+
+```SQL
+SELECT * FROM libros WHERE titulo LIKE '%la%';
+```
+
+#### Palabras que tengan 5 caracteres 
+
+Podemoslos filtrar si en el medio sea una letra "b"
+
+```SQL
+SELECT * FROM libros WHERE titulo LIKE '__r__'; -- BUSCAR TÍTULOS CON 2 CARACTERES ANTES Y DESPUÉS DE LA LETRA 'R'
+```
+
+#### Palabras con expresiones regulares
+
+```SQL
+SELECT * FROM libros WHERE REGEXP_LIKE(titulo, 'Harry Potter'); -- BUSCAR LIBROS DE HARRY POTTER
+
+SELECT * FROM libros WHERE titulo REGEXP '^[HL]'; -- FILTRAR LIBROS QUE EMPIECEN CON H O L
+```
+
+### Ordenar registros 
+
+Vamos a realizar un filtro donde el orden estará estrictamente dado por la columna titulo.
+
+#### Ascendente
+
+```SQL
+SELECT * FROM libros ORDER BY titulo ASC;
+
+
++----------+---------------------------------------------------+
+| autor_id | titulo                                            |
++----------+---------------------------------------------------+
+|        5 | 1984                                              |
+|        3 | Cien años de soledad                              |
+|        8 | Crimen y castigo                                  |
+|        9 | Don Quijote de la Mancha                          |
+|        3 | El amor en los tiempos del cólera                 |
+|       14 | El extranjero                                     |
+|        7 | El gran Gatsby                                    |
+|       18 | El guardián entre el centeno                      |
+|       17 | El lobo estepario                                 |
+|        2 | El señor de los anillos: El retorno del rey       |
+|        2 | El señor de los anillos: La comunidad del anillo  |
+```
+
+#### Descendente
+
+```SQL
+SELECT autor_id,titulo FROM libros ORDER BY titulo DESC;
++----------+---------------------------------------------------+
+| autor_id | titulo                                            |
++----------+---------------------------------------------------+
+|       11 | Ulises                                            |
+|        4 | Sentido y sensibilidad                            |
+|        5 | Rebelión en la granja                             |
+|        4 | Orgullo y prejuicio                               |
+|        6 | Matar a un ruiseñor                               |
+|        8 | Los hermanos Karamazov                            |
+```
+
+### Limitar registros
+
+```sql
+SELECT autor_id,titulo FROM libros LIMIT 2;
++----------+------------------------------------+
+| autor_id | titulo                             |
++----------+------------------------------------+
+|        1 | Harry Potter y la piedra filosofal |
+|        1 | Harry Potter y la cámara secreta   |
++----------+------------------------------------+
+```
 
