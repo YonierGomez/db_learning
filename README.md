@@ -231,7 +231,7 @@ SHOW COLUMNS FROM autores;
 
 Utilizamos `CREATE TABLE <nueva-tabla> LIKE <tabla-base>;`
 
-```
+```SQL
 CREATE TABLE usuarios LIKE autores;
 Query OK, 0 rows affected (0.01 sec)
 
@@ -1160,3 +1160,589 @@ SELECT autor_id,titulo FROM libros LIMIT 2;
 +----------+------------------------------------+
 ```
 
+```SQL
+ SELECT autor_id,titulo FROM libros WHERE autor_id = 2 LIMIT 3;
+ 
++----------+---------------------------------------------------+
+| autor_id | titulo                                            |
++----------+---------------------------------------------------+
+|        2 | El señor de los anillos: La comunidad del anillo  |
+|        2 | El señor de los anillos: Las dos torres           |
+|        2 | El señor de los anillos: El retorno del rey       |
++----------+---------------------------------------------------+
+```
+
+#### Limitar registros posicional
+
+Puedo especificar el origen y fin
+
+```SQL
+mysql> SELECT autor_id,titulo FROM libros LIMIT 2, 2;
++----------+-----------------------------------------+
+| autor_id | titulo                                  |
++----------+-----------------------------------------+
+|        1 | Harry Potter y el prisionero de Azkaban |
+|        1 | Harry Potter y el cáliz de fuego        |
++----------+-----------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> SELECT autor_id,titulo FROM libros LIMIT 4, 2;
++----------+------------------------------------------+
+| autor_id | titulo                                   |
++----------+------------------------------------------+
+|        1 | Harry Potter y la orden del fénix        |
+|        1 | Harry Potter y el misterio del príncipe  |
++----------+------------------------------------------+
+2 rows in set (0.01 sec)
+
+mysql> SELECT autor_id,titulo FROM libros LIMIT 5, 2;
++----------+-------------------------------------------+
+| autor_id | titulo                                    |
++----------+-------------------------------------------+
+|        1 | Harry Potter y el misterio del príncipe   |
+|        1 | Harry Potter y las reliquias de la muerte |
++----------+-------------------------------------------+
+2 rows in set (0.01 sec)
+
+mysql> SELECT autor_id,titulo FROM libros LIMIT 7, 2;
++----------+---------------------------------------------------+
+| autor_id | titulo                                            |
++----------+---------------------------------------------------+
+|        2 | El señor de los anillos: La comunidad del anillo  |
+|        2 | El señor de los anillos: Las dos torres           |
++----------+---------------------------------------------------+
+```
+
+### Funciones de agregación
+
+Funciones que se ejecutan en un grupo de datos
+
+#### Count
+
+Esta función permite contar registros
+
+```SQL
+SELECT COUNT(*) FROM autores;
+
++----------+
+| COUNT(*) |
++----------+
+|       18 |
++----------+
+1 row in set (0.01 sec)
+```
+
+Ver los autores que poseen seudonimos
+
+```sql
+SELECT COUNT(*) FROM autores WHERE seudonimo IS NOT NULL ;
+
++----------+
+| COUNT(*) |
++----------+
+|       18 |
++----------+
+1 row in set (0.01 sec)
+```
+
+En la función count podemos reemplazar el asterisco y poner una columna.
+
+```SQL
+SELECT COUNT(titulo) FROM libros  ;
++---------------+
+| COUNT(titulo) |
++---------------+
+|            30 |
++---------------+
+1 row in set (0.01 sec)
+```
+
+#### Sum
+
+Obtener la suma de todas las ventas
+
+```SQL
+SELECT SUM(ventas) FROM libros;
+```
+
+#### Max y Min
+
+Obtenemos el valor máximo de una columna, en este caso el máximo de ventas
+
+```SQL
+SELECT MAX(ventas) FROM libros;
+```
+
+Obtener el valor mínimo de ventas
+
+```SQL
+SELECT MIN(ventas) FROM libros;
+```
+
+#### AVG
+
+Permite obtener el promedio
+
+```SQL
+SELECT AVG(ventas) FROM libros;
+```
+
+### Agrupamiento
+
+Las funciones de agregación solo dejan trabajar con una columna, si queremos utilizar mas de una debemos utilizar GROUP BY (agrupa los registros bajo un criterio o columna)
+
+```SQL
+SELECT autor_id, SUM(ventas) FROM libros GROUP BY autor_id;
+```
+
+#### Condiciones bajo agrupamiento
+
+```SQL
+-- Filtrar libros con ventas mayores a 100 utilizando GROUP BY y HAVING
+SELECT autor_id, SUM(ventas) AS total_ventas 
+FROM libros 
+GROUP BY autor_id 
+HAVING total_ventas > 100;
+```
+
+### Unir resultados
+
+Lo podemos hacer mediante el operador union para combiar múltiples resultados
+
+```SQL
+SELECT CONCAT(nombre, " ", apellido) AS nombre_completo FROM autores;
++-------------------------------+
+| nombre_completo               |
++-------------------------------+
+| Stephen Edwin King            |
+| Joanne Rowling                |
+| Daniel Brown                  |
+| John Katzenbach               |
+| John Ronald Reuel Tolkien     |
+| Miguel de Unamuno             |
+| Arturo Pérez Reverte          |
+| George Raymond Richard Martin |
++-------------------------------+
+
+
+SELECT CONCAT(nombre, " ", apellidos) AS nombre_completo FROM usuarios;
++-----------------+
+| nombre_completo |
++-----------------+
+| Eduardo García  |
+| Codi1 Facilito  |
+| Codi2 Facilito  |
+| Codi3 Facilito  |
++-----------------+
+4 rows in set (0.00 sec)
+```
+
+Como ven tenemos dos query, dos resultados, para tener una sola ejecución usuaremos UNION
+
+```SQL
+SELECT CONCAT(nombre, " ", apellido) AS nombre_completo FROM autores
+    -> UNION 
+    -> SELECT CONCAT(nombre, " ", apellidos) AS nombre_completo FROM usuarios;
++-------------------------------+
+| nombre_completo               |
++-------------------------------+
+| Stephen Edwin King            |
+| Joanne Rowling                |
+| Daniel Brown                  |
+| John Katzenbach               |
+| John Ronald Reuel Tolkien     |
+| Miguel de Unamuno             |
+| Arturo Pérez Reverte          |
+| George Raymond Richard Martin |
+| Eduardo García                |
+| Codi1 Facilito                |
+| Codi2 Facilito                |
+| Codi3 Facilito                |
++-------------------------------+
+12 rows in set (0.00 sec)
+```
+
+> Nota: En las consultas debe existir la misma cantidad de columnas, si se necesita pues en uno de los filtros se debe poner una columna vacía, ejemplo
+
+```SQL
+SELECT CONCAT(nombre, " ", apellido) AS nombre_completo, " " AS email FROM autores UNION  SELECT CONCAT(nombre, " ", apellidos) AS nombre_completo, email AS email FROM usuarios;
++-------------------------------+----------------------------+
+| nombre_completo               | email                      |
++-------------------------------+----------------------------+
+| Stephen Edwin King            |                            |
+| Joanne Rowling                |                            |
+| Daniel Brown                  |                            |
+| John Katzenbach               |                            |
+| John Ronald Reuel Tolkien     |                            |
+| Miguel de Unamuno             |                            |
+| Arturo Pérez Reverte          |                            |
+| George Raymond Richard Martin |                            |
+| Eduardo García                | eduardo@codigofacilito.com |
+| Codi1 Facilito                | ayuda@codigofacilito.com   |
+| Codi2 Facilito                | ayuda@codigofacilito.com   |
+| Codi3 Facilito                | ayuda@codigofacilito.com   |
++-------------------------------+----------------------------+
+```
+
+En este caso en el primer query mande una columna vacia para el campo email.
+
+### Subconsultas
+
+Son consultas dentro de otras, consultas anidadas, ej obtener los nombres de los autores cuyas ventas hayan superado el promedio.
+
+#### Obtener promedio de ventas
+
+```SQL
+select AVG(ventas) from libros;
++-------------+
+| AVG(ventas) |
++-------------+
+|  72727.2727 |
++-------------+
+1 row in set (0.01 sec)
+```
+
+#### Subconsulta
+
+```SQL
+SELECT autor_id FROM libros GROUP BY autor_id HAVING SUM(ventas) > (select AVG(ventas) from libros) ORDER BY autor_id;
++----------+
+| autor_id |
++----------+
+|        1 |
+|        2 |
++----------+
+2 rows in set (0.00 sec)
+```
+
+### Validar registros
+
+```SQL
+select IF (EXISTS (SELECT * FROM autores WHERE nombre = 'Stephen Edwin'), 'Existe', 'No existe') as existe;
+```
+
+### Explicación funciónes de agregacion
+
+Las funciones de agregación se usan en SQL para hacer cálculos sobre un conjunto de filas y devolver un solo valor. Estas funciones son especialmente útiles cuando quieres hacer resúmenes de datos, como sumar cantidades, promediar valores, contar registros, etc.
+
+Aquí te muestro las principales funciones de agregación y su uso:
+
+### 1. `COUNT()`
+
+Cuenta cuántas filas hay en un grupo o en toda la tabla.
+
+- **Uso típico**: Para saber cuántas veces aparece algo.
+- **Ejemplo**: Contar cuántas ventas se hicieron.
+
+```SQL
+SELECT COUNT(*) AS Total_Ventas
+FROM libros;
++--------------+
+| Total_Ventas |
++--------------+
+|           55 |
++--------------+
+```
+
+Esto cuenta todas las filas de la tabla `ventas`. Si lo combinas con `GROUP BY`, cuenta las filas de cada grupo.
+
+### 2. `SUM()`
+
+Suma los valores de una columna numérica.
+
+- **Uso típico**: Para saber el total de algo, como ventas o cantidades.
+- **Ejemplo**: Sumar todas las cantidades de productos vendidos.
+
+```SQL
+SELECT SUM(ventas) AS Total_Ventas FROM libros;
++--------------+
+| Total_Ventas |
++--------------+
+|      4000000 |
++--------------+
+1 row in set (0.00 sec)
+```
+
+Si quieres ver la cantidad total por producto, podrías combinarlo con `GROUP BY`:
+
+```SQL
+SELECT Producto, SUM(Cantidad) AS Total_Cantidad
+FROM ventas
+GROUP BY Producto;
+```
+
+### 3. `AVG()`
+
+Calcula el promedio de una columna numérica.
+
+- **Uso típico**: Para saber el valor promedio de algo, como el precio o la cantidad vendida.
+- **Ejemplo**: Calcular el promedio de ventas por transacción.
+
+```SQL
+SELECT AVG(Cantidad) AS Promedio_Ventas
+FROM ventas;
+```
+
+Si quieres el promedio por producto:
+
+```SQL
+SELECT Producto, AVG(Cantidad) AS Promedio_Ventas
+FROM ventas
+GROUP BY Producto;
+```
+
+### 4. `MAX()`
+
+Encuentra el valor máximo en una columna.
+
+- **Uso típico**: Para saber el valor más alto de algo, como el precio máximo o la venta más grande.
+- **Ejemplo**: Obtener la cantidad máxima de unidades vendidas en una transacción.
+
+```SQL
+SELECT MAX(Cantidad) AS Max_Ventas
+FROM ventas;
+```
+
+Si quieres ver el máximo por producto:
+
+```SQL
+SELECT Producto, MAX(Cantidad) AS Max_Ventas
+FROM ventas
+GROUP BY Producto;
+```
+
+### 5. `MIN()`
+
+Encuentra el valor mínimo en una columna.
+
+- **Uso típico**: Para saber el valor más bajo de algo.
+- **Ejemplo**: Obtener la cantidad mínima de unidades vendidas en una transacción.
+
+```SQL
+SELECT MIN(Cantidad) AS Min_Ventas
+FROM ventas;
+```
+
+Si quieres ver el mínimo por producto:
+
+```SQL
+SELECT Producto, MIN(Cantidad) AS Min_Ventas
+FROM ventas
+GROUP BY Producto;
+```
+
+### Resumen de las Funciones de Agregación
+
+| Función   | Descripción                     | Ejemplo de Uso                            |
+| --------- | ------------------------------- | ----------------------------------------- |
+| `COUNT()` | Cuenta las filas o valores      | `COUNT(*)` cuenta el total de filas.      |
+| `SUM()`   | Suma los valores en una columna | `SUM(Cantidad)` para el total vendido.    |
+| `AVG()`   | Calcula el promedio             | `AVG(Cantidad)` para el promedio vendido. |
+| `MAX()`   | Encuentra el valor máximo       | `MAX(Cantidad)` para la venta más alta.   |
+| `MIN()`   | Encuentra el valor mínimo       | `MIN(Cantidad)` para la venta más baja.   |
+
+Estas funciones te permiten obtener mucha información útil cuando las combinas con `GROUP BY` y `HAVING`.
+
+### ¿Qué es `GROUP BY`?
+
+Cuando tienes una lista larga de datos, `GROUP BY` se usa para agrupar esas filas que tienen algo en común. Piensa en una tabla que tiene las ventas de una tienda. La tienda registra cada venta con el nombre del producto, el vendedor y la cantidad vendida. Si quieres saber cuántas veces se vendió cada producto, necesitas agrupar todas las ventas del mismo producto para contar cuántas veces aparece.
+
+Entonces, `GROUP BY` agrupa los datos que tienen un valor común en una columna para que puedas hacer cálculos sobre cada grupo (como contar cuántas ventas hubo, sumar las cantidades vendidas, etc.).
+
+### ¿Cómo funciona en pasos?
+
+1. **Seleccionas los datos** (con `SELECT`) que te interesa ver.
+2. **Filtras** (con `WHERE`) si hay algún dato que no quieres incluir en los resultados.
+3. **Agrupas** (con `GROUP BY`) las filas que tienen valores iguales en una columna.
+4. Si quieres aplicar una condición al grupo (como mostrar solo los productos con más de 10 ventas), usas **`HAVING`** después de agrupar.
+
+### Ejemplo sencillo
+
+Supón que tienes una tabla de ventas como esta:
+
+| Producto | Cantidad |
+| -------- | -------- |
+| Manzana  | 5        |
+| Manzana  | 3        |
+| Pera     | 7        |
+| Manzana  | 2        |
+| Pera     | 6        |
+
+Si quieres saber cuántas unidades se vendieron de cada producto, usas `GROUP BY` para agrupar las ventas de cada producto.
+
+```SQL
+SELECT Producto, SUM(Cantidad) AS Total_Vendido
+FROM ventas
+GROUP BY Producto;
+```
+
+Esto produce un resultado así:
+
+| Producto | Total_Vendido |
+| -------- | ------------- |
+| Manzana  | 10            |
+| Pera     | 13            |
+
+Aquí:
+
+- `SELECT Producto` selecciona la columna del producto.
+- `SUM(Cantidad)` suma la cantidad para cada grupo de productos.
+- `GROUP BY Producto` agrupa todas las filas con el mismo nombre de producto.
+
+### ¿Para qué es `HAVING`?
+
+`HAVING` es como un filtro, pero para los resultados de la agrupación. Supón que solo quieres ver los productos que se vendieron más de 10 veces en total. `HAVING` te permite aplicar esa condición después de agrupar.
+
+```SQL
+SELECT Producto, SUM(Cantidad) AS Total_Vendido
+FROM ventas
+GROUP BY Producto
+HAVING SUM(Cantidad) > 10;
+```
+
+Resultado:
+
+| Producto | Total_Vendido |
+| -------- | ------------- |
+| Pera     | 13            |
+
+Aquí `HAVING` filtra los productos que no alcanzan el total de 10 en ventas. Sin `GROUP BY`, no podríamos aplicar esta condición porque estamos trabajando con el total de cada grupo.
+
+### Resumen
+
+- **GROUP BY**: Agrupa filas que tienen el mismo valor en una columna para poder calcular sumas, promedios, etc., en cada grupo.
+- **HAVING**: Filtra esos grupos, aplicando condiciones después de que se hayan agrupado los datos.
+
+## Join
+
+Los `JOINs` en SQL se utilizan para combinar datos de dos o más tablas en una sola consulta. Esto es útil cuando necesitas información que está repartida en distintas tablas, pero que tiene algún tipo de relación entre ellas.
+
+Voy a explicarte los tipos principales de `JOIN` y cómo funcionan, con ejemplos sencillos.
+
+### Imaginemos las tablas
+
+Para ilustrarlo, supongamos que tenemos dos tablas:
+
+1. **Tabla `autores`**: Contiene información sobre los autores.
+
+   | autor_id | nombre         |
+   | -------- | -------------- |
+   | 1        | J.K. Rowling   |
+   | 2        | George Orwell  |
+   | 3        | J.R.R. Tolkien |
+
+2. **Tabla `libros`**: Contiene información sobre los libros y las ventas.
+
+   | libro_id | titulo       | autor_id | ventas |
+   | -------- | ------------ | -------- | ------ |
+   | 1        | Harry Potter | 1        | 5000   |
+   | 2        | 1984         | 2        | 3500   |
+   | 3        | El Hobbit    | 3        | 2000   |
+   | 4        | Animales     | 2        | 1000   |
+
+Estas tablas están relacionadas a través de `autor_id`, que aparece en ambas.
+
+### Tipos de JOINs
+
+#### 1. `INNER JOIN`
+
+Un `INNER JOIN` devuelve solo las filas que tienen coincidencias en ambas tablas. Si una fila de la tabla `libros` no tiene un `autor_id` que coincida en `autores`, esa fila no aparecerá en el resultado.
+
+```SQL
+SELECT autores.nombre, libros.titulo, libros.ventas
+FROM autores
+INNER JOIN libros ON autores.autor_id = libros.autor_id;
+```
+
+**Resultado:**
+
+| nombre         | titulo       | ventas |
+| -------------- | ------------ | ------ |
+| J.K. Rowling   | Harry Potter | 5000   |
+| George Orwell  | 1984         | 3500   |
+| J.R.R. Tolkien | El Hobbit    | 2000   |
+| George Orwell  | Animales     | 1000   |
+
+**¿Cuándo usar `INNER JOIN`?**
+
+- Cuando solo quieres ver los registros que tienen coincidencias en ambas tablas.
+
+#### 2. `LEFT JOIN` (o `LEFT OUTER JOIN`)
+
+Un `LEFT JOIN` devuelve todas las filas de la primera tabla (en este caso, `autores`), y las filas coincidentes de la segunda tabla (`libros`). Si no hay coincidencia, las columnas de `libros` en esa fila aparecerán como `NULL`.
+
+```SQL
+SELECT autores.nombre, libros.titulo, libros.ventas
+FROM autores
+LEFT JOIN libros ON autores.autor_id = libros.autor_id;
+```
+
+**Resultado:**
+
+| nombre         | titulo       | ventas |
+| -------------- | ------------ | ------ |
+| J.K. Rowling   | Harry Potter | 5000   |
+| George Orwell  | 1984         | 3500   |
+| J.R.R. Tolkien | El Hobbit    | 2000   |
+| George Orwell  | Animales     | 1000   |
+| Isaac Asimov   | NULL         | NULL   |
+
+**¿Cuándo usar `LEFT JOIN`?**
+
+- Cuando quieres todas las filas de la primera tabla y solo las coincidencias de la segunda, mostrando `NULL` si no hay coincidencia en la segunda tabla.
+
+#### 3. `RIGHT JOIN` (o `RIGHT OUTER JOIN`)
+
+Un `RIGHT JOIN` es similar al `LEFT JOIN`, pero devuelve todas las filas de la segunda tabla (`libros`) y solo las filas coincidentes de la primera tabla (`autores`).
+
+```SQL
+SELECT autores.nombre, libros.titulo, libros.ventas
+FROM autores
+RIGHT JOIN libros ON autores.autor_id = libros.autor_id;
+```
+
+**Resultado** (si hubiera un libro sin autor):
+
+| nombre         | titulo       | ventas |
+| -------------- | ------------ | ------ |
+| J.K. Rowling   | Harry Potter | 5000   |
+| George Orwell  | 1984         | 3500   |
+| J.R.R. Tolkien | El Hobbit    | 2000   |
+| George Orwell  | Animales     | 1000   |
+| NULL           | Libro Nuevo  | 700    |
+
+**¿Cuándo usar `RIGHT JOIN`?**
+
+- Cuando quieres todas las filas de la segunda tabla y solo las coincidencias de la primera, mostrando `NULL` si no hay coincidencia en la primera tabla.
+
+#### 4. `FULL JOIN` (o `FULL OUTER JOIN`)
+
+Un `FULL JOIN` devuelve todas las filas cuando hay una coincidencia en cualquiera de las tablas, y rellena con `NULL` donde no hay coincidencias en una de las tablas. No todos los sistemas de bases de datos soportan `FULL JOIN`.
+
+```SQL
+SELECT autores.nombre, libros.titulo, libros.ventas
+FROM autores
+FULL JOIN libros ON autores.autor_id = libros.autor_id;
+```
+
+**Resultado**:
+
+| nombre         | titulo       | ventas |
+| -------------- | ------------ | ------ |
+| J.K. Rowling   | Harry Potter | 5000   |
+| George Orwell  | 1984         | 3500   |
+| J.R.R. Tolkien | El Hobbit    | 2000   |
+| George Orwell  | Animales     | 1000   |
+| Isaac Asimov   | NULL         | NULL   |
+| NULL           | Libro Nuevo  | 700    |
+
+**¿Cuándo usar `FULL JOIN`?**
+
+- Cuando quieres ver todas las filas de ambas tablas, con `NULL` donde no hay coincidencias en ninguna de las tablas.
+
+### Resumen
+
+- **`INNER JOIN`**: Muestra solo los registros que tienen coincidencias en ambas tablas.
+- **`LEFT JOIN`**: Muestra todos los registros de la primera tabla y las coincidencias de la segunda, con `NULL` si no hay coincidencias.
+- **`RIGHT JOIN`**: Muestra todos los registros de la segunda tabla y las coincidencias de la primera, con `NULL` si no hay coincidencias.
+- **`FULL JOIN`**: Muestra todos los registros de ambas tablas, con `NULL` donde no haya coincidencias en ninguna de las tablas.
