@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: neytor
+      MYSQL_DATABASE: neytor-db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: neytor
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: neytor-db
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: neytor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: adminer_ui
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql_container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_ui
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: neytor
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  mysql_data:
+  postgres_data:
+
