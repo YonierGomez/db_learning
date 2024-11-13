@@ -139,4 +139,3 @@ GROUP BY a.autor_id
 ORDER BY promedio_ventas DESC
 LIMIT 1;
 
-
